@@ -8,6 +8,7 @@ import { Rating } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { appendQueryString } from "@/utils/helpers";
 
 export default function ProductCarDetail({
   dictionary,
@@ -26,7 +27,7 @@ export default function ProductCarDetail({
   const [imageTitle, setImageTitle] = useState<string>();
   const [imageContent, setImageContent] = useState<string>();
   const { dataPickUpAndDropOff } = useSelector(
-    (state: RootState) => state.product
+    (state: RootState) => state.product,
   );
 
   useEffect(() => {
@@ -39,7 +40,15 @@ export default function ProductCarDetail({
 
   const redirectPayment = () => {
     router.push(
-      `/${lang}/payment?cars_id=${car_id}${dataPickUpAndDropOff?.pickup_location_id ? `&pickup_location_id=${dataPickUpAndDropOff.pickup_location_id}` : ""}${dataPickUpAndDropOff?.pickup_date ? `&pickup_date=${dataPickUpAndDropOff.pickup_date}` : ""}${dataPickUpAndDropOff?.dropoff_location_id ? `&dropoff_location_id=${dataPickUpAndDropOff.dropoff_location_id}`: ""}${dataPickUpAndDropOff?.dropoff_date ? `&dropoff_date=${dataPickUpAndDropOff.dropoff_date}` : ""}`
+      appendQueryString(`/${lang}/payment`, {
+        cars_id: car_id,
+        pickup_location_id:
+          dataPickUpAndDropOff?.pickup_location_id || undefined,
+        pickup_date: dataPickUpAndDropOff?.pickup_date || undefined,
+        dropoff_location_id:
+          dataPickUpAndDropOff?.dropoff_location_id || undefined,
+        dropoff_date: dataPickUpAndDropOff?.dropoff_date || undefined,
+      }),
     );
   };
 
@@ -59,7 +68,11 @@ export default function ProductCarDetail({
             </div>
             <img
               src={imageSlider}
-              alt=""
+              alt={
+                imageTitle
+                  ? `${productCarDetail?.name} - ${imageTitle}`
+                  : productCarDetail?.name || "Car image"
+              }
               className="w-full xs:h-[232px] xm:h-[360px] sm:h-[430px] md:h-[500px] mh:h-[380px] lx:h-[400px] 1xl:h-[450px] rounded-[10px]"
             />
           </div>
@@ -77,7 +90,10 @@ export default function ProductCarDetail({
               >
                 <img
                   src={item.image_url}
-                  alt="car detail"
+                  alt={
+                    item.title || `${productCarDetail?.name} image ${index + 1}`
+                  }
+                  loading="lazy"
                   className={`w-full ${imageActive === index + 1 ? "xs:h-[64px] xm:h-[100px] sm:h-[108px] ml:h-[150px] mh:h-[94px] lg:h-[114px] lm:h-[136px]" : "xs:h-[64px] xm:h-[106px] sm:h-[124px] ml:h-[156px] mh:h-[108px] lg:h-[130px] lm:h-[148px]"} rounded-[10px]`}
                 />
               </div>

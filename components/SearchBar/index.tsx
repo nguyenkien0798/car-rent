@@ -7,7 +7,7 @@ import Image from "next/image";
 import { IconButton, Popover, TextField } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
-import FilterIcon from "/public/images/filter.svg";
+import FilterIcon from "../../public/images/filter.svg";
 import { getDictionary } from "@/get-dictionary";
 import SidebarFilter from "../SidebarFilter";
 import SliderPrice from "../SliderPrice";
@@ -16,13 +16,14 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Locale } from "@/i18n-config";
+import { appendQueryString } from "@/utils/helpers";
 
 const styleInput = {
   "& .MuiInputBase-root": {
     borderRadius: "30px",
     padding: "12px",
-    paddingRight: '48px',
-    border: '1px solid #C3D4E966'
+    paddingRight: "48px",
+    border: "1px solid #C3D4E966",
   },
   "& .MuiInputBase-input": {
     padding: 0,
@@ -38,17 +39,17 @@ const SearchBar = ({
   filter?: FilterTag;
   params: Locale;
 }) => {
-  const searchParams = useSearchParams()
-  const search = searchParams.get('search')
-  const capacities = searchParams.get('capacities')
-  const type_ids = searchParams.get('type_ids')
-  const max_price = searchParams.get('max_price')
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search");
+  const capacities = searchParams.get("capacities");
+  const type_ids = searchParams.get("type_ids");
+  const max_price = searchParams.get("max_price");
   const router = useRouter();
   const pathName = usePathname();
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [valueCheckBoxType, setValueCheckBoxType] = useState<string[]>([]);
   const [valueCheckBoxCapacity, setValueCheckBoxCapacity] = useState<string[]>(
-    []
+    [],
   );
   const [priceFilter, setPriceFilter] = useState<string | string[]>([]);
   const [valueInput, setValueInput] = useState<string>();
@@ -68,23 +69,23 @@ const SearchBar = ({
 
   useEffect(() => {
     if (search) {
-      setValueInput(search)
+      setValueInput(search);
     }
-  }, [search])
+  }, [search]);
 
   useEffect(() => {
     if (pathName !== `/${params}/category`) {
-      setValueCheckBoxCapacity([])
-      setValueCheckBoxType([])
-      setPriceFilter('')
-      setValueInput('')
+      setValueCheckBoxCapacity([]);
+      setValueCheckBoxType([]);
+      setPriceFilter("");
+      setValueInput("");
     }
-  }, [pathName])
+  }, [pathName]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChangeValueCheckBoxCapacity = (
     checked: boolean,
-    name: string
+    name: string,
   ) => {
     if (checked) {
       setValueCheckBoxCapacity([...valueCheckBoxCapacity, name]);
@@ -106,24 +107,42 @@ const SearchBar = ({
 
   const handleChangeCommited = (
     event: React.SyntheticEvent | Event,
-    newValue: string
+    newValue: string,
   ) => {
     setPriceFilter(newValue);
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOnKeyDown = (e: any) => {
-    if (e.key === "Enter") {  
+    if (e.key === "Enter") {
       router.push(
-        `/${params}/category?${valueInput ? `search=${valueInput}` : ""}${capacities ? `&capacities=${capacities}` : ""}${type_ids ? `&type_ids=${type_ids}`: ""}${max_price ? `&max_price=${max_price}` : ""}`
+        appendQueryString(`/${params}/category`, {
+          search: valueInput || undefined,
+          capacities: capacities || undefined,
+          type_ids: type_ids || undefined,
+          max_price: max_price || undefined,
+        }),
       );
     }
   };
 
   const handleSubmitFilter = useCallback(() => {
+    const nextPriceFilter = Array.isArray(priceFilter)
+      ? priceFilter[0]
+      : priceFilter || undefined;
+
     router.push(
-      `/${params}/category?capacities=${valueCheckBoxCapacity}&type_ids=${valueCheckBoxType}${valueInput ? `&search=${valueInput}` : ""}${priceFilter ? `&max_price=${priceFilter}` : ""}`,
-      { scroll: false }
+      appendQueryString(`/${params}/category`, {
+        capacities: valueCheckBoxCapacity.length
+          ? valueCheckBoxCapacity.join(",")
+          : undefined,
+        type_ids: valueCheckBoxType.length
+          ? valueCheckBoxType.join(",")
+          : undefined,
+        search: valueInput || undefined,
+        max_price: nextPriceFilter,
+      }),
+      { scroll: false },
     );
     handleClose();
   }, [valueCheckBoxType, valueCheckBoxCapacity, priceFilter, valueInput]);
@@ -161,22 +180,12 @@ const SearchBar = ({
       />
       <div className="absolute right-[10px] hd:hidden sm:flex justify-center w-[48px] h-[48px] sm:border-0 xs:border-[1px] xs:border-solid xs:border-[#C3D4E966] rounded-[10px] cursor-pointer">
         <IconButton onClick={handleOpenPopover}>
-          <Image
-            src={FilterIcon}
-            alt="filter-icon"
-            width={24}
-            height={24}
-          />
+          <Image src={FilterIcon} alt="filter-icon" width={24} height={24} />
         </IconButton>
       </div>
       <div className="xs:flex sm:hidden justify-center w-[48px] h-[48px] sm:border-0 xs:border-[1px] xs:border-solid xs:border-[#C3D4E966] rounded-[10px] cursor-pointer">
-        <IconButton sx={{ width: '48px' }} onClick={handleOpenPopover}>
-          <Image
-            src={FilterIcon}
-            alt="filter-icon"
-            width={24}
-            height={24}
-          />
+        <IconButton sx={{ width: "48px" }} onClick={handleOpenPopover}>
+          <Image src={FilterIcon} alt="filter-icon" width={24} height={24} />
         </IconButton>
       </div>
       <Popover

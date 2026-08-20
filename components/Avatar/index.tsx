@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import DefaultAvatar from "/public/images/avatar-default.png";
+import DefaultAvatar from "../../public/images/avatar-default.png";
 import { Popover, Typography } from "@mui/material";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -39,7 +39,7 @@ const Avatar = ({
 
   const handleLogoutUser = () => {
     dispatch(logout());
-    router.push(`/${lang}/`)
+    router.push(`/${lang}/`);
   };
 
   const redirectOrdersPage = () => {

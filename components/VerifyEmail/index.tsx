@@ -2,18 +2,18 @@
 
 import React, { useEffect } from "react";
 import Image from "next/image";
-import EmailSuccess from "/public/images/email-success.png";
-import EmailFailed from "/public/images/email-failed.png";
+import EmailSuccess from "../../public/images/email-success.png";
+import EmailFailed from "../../public/images/email-failed.png";
 import { getDictionary } from "@/get-dictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Locale } from "@/i18n-config";
 
 export default function VerifyEmail({
   dictionary,
-  lang
+  lang,
 }: {
   dictionary: Awaited<ReturnType<typeof getDictionary>>["verifyEmail"];
-  lang: Locale
+  lang: Locale;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,30 +24,30 @@ export default function VerifyEmail({
 
   useEffect(() => {
     if (token) {
-      verifyToken()
+      verifyToken();
     }
   }, [token]);
 
   const verifyToken = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     const res = await fetch(`${urlAPI}/v1/auth/verify/email?token=${token}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Accept-Language": `${lang === 'en' ? 'en-US' : 'vi'}`,
+        "Accept-Language": `${lang === "en" ? "en-US" : "vi"}`,
       },
-    })
+    });
 
-    const data = await res.json()
+    const data = await res.json();
 
     if (data === "errors.jwt expired") {
-      setIsVerifyEmail('error')
-      setIsLoading(false)
+      setIsVerifyEmail("error");
+      setIsLoading(false);
     } else {
-      setIsVerifyEmail('success')
-      setIsLoading(false)
+      setIsVerifyEmail("success");
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRedirectSignIn = () => {
     router.push("/login");

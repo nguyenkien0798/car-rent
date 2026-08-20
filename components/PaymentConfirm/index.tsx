@@ -4,10 +4,10 @@
 import React, { useState } from "react";
 import { getDictionary } from "@/get-dictionary";
 import { Checkbox } from "@mui/material";
-import SecuritySafety from "/public/images/security_safety.png";
+import SecuritySafety from "../../public/images/security_safety.png";
 import Image from "next/image";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import RefreshIcon from '@mui/icons-material/Refresh';
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 export default function PaymentConfirm({
   dictionary,
@@ -49,7 +49,13 @@ export default function PaymentConfirm({
 
         <div className="mt-[32px] px-[32px] py-[16px] flex items-center gap-[20px] bg-[#F6F7F9] rounded-[10px]">
           <Checkbox
-            sx={{ "&.MuiButtonBase-root": { width: {xs: '16px', md: '24px'}, height: {xs: '16px', md: '24px'}, p: 0 } }}
+            sx={{
+              "&.MuiButtonBase-root": {
+                width: { xs: "16px", md: "24px" },
+                height: { xs: "16px", md: "24px" },
+                p: 0,
+              },
+            }}
           />
           <p className="xs:text-[12px] sm:text-[16px] xs:leading-[19px] sm:leading-[21px] xs:font-medium sm:font-semibol text-[#1F2544]">
             {dictionary.payment.iAgreeWithSending}
@@ -58,7 +64,13 @@ export default function PaymentConfirm({
 
         <div className="mt-[32px] px-[32px] py-[16px] flex items-center gap-[20px] bg-[#F6F7F9] rounded-[10px]">
           <Checkbox
-            sx={{ "&.MuiButtonBase-root": { width: {xs: '16px', md: '24px'}, height: {xs: '16px', md: '24px'} ,p: 0 } }}
+            sx={{
+              "&.MuiButtonBase-root": {
+                width: { xs: "16px", md: "24px" },
+                height: { xs: "16px", md: "24px" },
+                p: 0,
+              },
+            }}
             onChange={(e, val) => setCheckboxAgreeTerms(val)}
           />
           <p className="xs:text-[12px] sm:text-[16px] xs:leading-[19px] sm:leading-[21px] xs:font-medium sm:font-semibol text-[#1F2544]">
@@ -68,42 +80,43 @@ export default function PaymentConfirm({
 
         <div className="relative">
           <div className="mt-[32px]">
-              <button
-                type="submit"
+            <button
+              type="submit"
+              disabled={!checkoboxAgreeTerms}
+              className={`${!checkoboxAgreeTerms && "bg-[#cccccc]"} xs:px-[16px] sm:px-[32px] xs:py-[10px] sm:py-[16px] bg-[#3563E9] xs:text-[12px] sm:text-[16px] text-[#FFFFFF] font-bold xs:leading-[15px] sm:leading-[20px] xs:rounded-[4px] sm:rounded-[10px]`}
+            >
+              {isLoadingButtonSubmit ? (
+                <RefreshIcon className="animate-spin h-4" />
+              ) : (
+                dictionary.payment.rentNow
+              )}
+            </button>
+          </div>
+
+          {paymentMethod === 1 && (
+            <div className="absolute top-0 w-[150px] opacity-0">
+              <PayPalButtons
                 disabled={!checkoboxAgreeTerms}
-                className={`${!checkoboxAgreeTerms && 'bg-[#cccccc]'} xs:px-[16px] sm:px-[32px] xs:py-[10px] sm:py-[16px] bg-[#3563E9] xs:text-[12px] sm:text-[16px] text-[#FFFFFF] font-bold xs:leading-[15px] sm:leading-[20px] xs:rounded-[4px] sm:rounded-[10px]`}
-              >
-                {isLoadingButtonSubmit ? (
-                  <RefreshIcon className="animate-spin h-4" />
-                ) : dictionary.payment.rentNow}
-              </button>
+                style={{
+                  layout: "horizontal",
+                  tagline: false,
+                  height: 50,
+                }}
+                createOrder={(data) => createOrder(data)}
+                onApprove={(data) => onApprove(data)}
+                onCancel={(data) => onCancel(data)}
+                onClick={async (data, actions) => {
+                  const result: any = await trigger();
+                  if (!result) {
+                    return actions.reject();
+                  } else {
+                    return actions.resolve();
+                  }
+                }}
+              />
             </div>
-          
-            {paymentMethod === 1 && (
-              <div className="absolute top-0 w-[150px] opacity-0">
-                <PayPalButtons
-                  disabled={!checkoboxAgreeTerms}
-                  style={{
-                    layout: "horizontal",
-                    tagline: false,
-                    height: 50,
-                  }}
-                  createOrder={(data) => createOrder(data)}
-                  onApprove={(data) => onApprove(data)}
-                  onCancel={(data) => onCancel(data)}
-                  onClick={async (data, actions) => {
-                    const result: any = await trigger();
-                    if (!result) {
-                      return actions.reject();
-                    } else {
-                      return actions.resolve();
-                    }
-                  }}
-                />
-              </div>
-            )}
+          )}
         </div>
-        
 
         <div className="mt-[32px]">
           <Image src={SecuritySafety} width={32} height={32} alt="" />

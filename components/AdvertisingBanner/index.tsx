@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import CarLeft from "/public/images/rental_car_1.png";
-import CarRight from "/public/images/rental_car_2.png";
+import CarLeft from "../../public/images/rental_car_1.png";
+import CarRight from "../../public/images/rental_car_2.png";
 import bgRentalCarLeft from "../../public/images/bg_rental_car_1.png";
 import bgRentalCarRight from "../../public/images/bg_rental_car_2.png";
 import { getDictionary } from "@/get-dictionary";

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { Locale } from "@/i18n-config";
 import { useForm } from "react-hook-form";
 import { RootState } from "@/redux/store";
+import { appendQueryString } from "@/utils/helpers";
 
 interface PickUpAndDropOff {
   pickup_location_id: string;
@@ -37,43 +38,65 @@ export default function FilterFindCar({
     },
     mode: "all",
   });
-  
-  const todayNow = new Date()
-  const { dataPickUpAndDropOff } = useSelector((state: RootState) => state.product);
+
+  const todayNow = new Date();
+  const { dataPickUpAndDropOff } = useSelector(
+    (state: RootState) => state.product,
+  );
 
   useEffect(() => {
     if (dataPickUpAndDropOff?.pickup_location_id) {
-      setValue('pickup_location_id', dataPickUpAndDropOff.pickup_location_id)
+      setValue("pickup_location_id", dataPickUpAndDropOff.pickup_location_id);
     }
     if (dataPickUpAndDropOff?.pickup_date) {
-      setValue('pickup_date', dataPickUpAndDropOff.pickup_date)
+      setValue("pickup_date", dataPickUpAndDropOff.pickup_date);
     } else {
-      setValue('pickup_date', dayjs(todayNow).toString())
+      setValue("pickup_date", dayjs(todayNow).toString());
     }
     if (dataPickUpAndDropOff?.dropoff_location_id) {
-      setValue('dropoff_location_id', dataPickUpAndDropOff.dropoff_location_id)
+      setValue("dropoff_location_id", dataPickUpAndDropOff.dropoff_location_id);
     }
     if (dataPickUpAndDropOff?.dropoff_date) {
-      setValue('dropoff_date', dataPickUpAndDropOff.dropoff_date)
+      setValue("dropoff_date", dataPickUpAndDropOff.dropoff_date);
     } else {
-      setValue('dropoff_date', dayjs(watch('pickup_date')).toString())
+      setValue("dropoff_date", dayjs(watch("pickup_date")).toString());
     }
-  }, [dataPickUpAndDropOff])
+  }, [dataPickUpAndDropOff]);
 
   const handleFindCar = () => {
-    const paramsUrl = `${watch("pickup_location_id") ? `pickup_location_id=${watch("pickup_location_id")}` : ""}${watch("pickup_date") ? `&pickup_date=${dayjs(watch("pickup_date")).toISOString()}` : `&pickup_date=${dayjs(todayNow).toISOString()}`}${watch("dropoff_location_id") ? `&dropoff_location_id=${watch("dropoff_location_id")}` : ""}${watch("dropoff_date") ? `&dropoff_date=${dayjs(watch("dropoff_date")).toISOString()}` : `&dropoff_date=${dayjs(todayNow).toISOString()}`}`;
-    if (watch('pickup_location_id') || watch('pickup_date') || watch('dropoff_location_id') || watch('dropoff_date')) {
+    const paramsUrl = appendQueryString("", {
+      pickup_location_id: watch("pickup_location_id") || undefined,
+      pickup_date: dayjs(watch("pickup_date") || todayNow).toISOString(),
+      dropoff_location_id: watch("dropoff_location_id") || undefined,
+      dropoff_date: dayjs(watch("dropoff_date") || todayNow).toISOString(),
+    });
+    if (
+      watch("pickup_location_id") ||
+      watch("pickup_date") ||
+      watch("dropoff_location_id") ||
+      watch("dropoff_date")
+    ) {
       dispatch(
         saveDataPickUpAndDropOff({
-          pickup_location_id: watch("pickup_location_id") ? watch("pickup_location_id") : "",
-          pickup_date: watch("pickup_date") ? dayjs(watch("pickup_date")).toString() : "",
-          dropoff_location_id: watch("dropoff_location_id") ? watch("dropoff_location_id") : "",
-          dropoff_date: watch("dropoff_date") ? dayjs(watch("dropoff_date")).toString() : ""
-        })
+          pickup_location_id: watch("pickup_location_id")
+            ? watch("pickup_location_id")
+            : "",
+          pickup_date: watch("pickup_date")
+            ? dayjs(watch("pickup_date")).toString()
+            : "",
+          dropoff_location_id: watch("dropoff_location_id")
+            ? watch("dropoff_location_id")
+            : "",
+          dropoff_date: watch("dropoff_date")
+            ? dayjs(watch("dropoff_date")).toString()
+            : "",
+        }),
       );
     }
 
-    router.push(`/${params}/category?${paramsUrl}`, { scroll: true });
+    router.push(`/${params}/category${paramsUrl ? `?${paramsUrl}` : ""}`, {
+      scroll: true,
+    });
   };
 
   return (

@@ -17,7 +17,8 @@ import { Drawer, IconButton } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import dayjs from "dayjs";
 import { useForm } from "react-hook-form";
-import NoData from "/public/images/no-data.png";
+import NoData from "../../public/images/no-data.png";
+import { appendQueryString } from "@/utils/helpers";
 
 interface PickUpAndDropOff {
   pickup_location_id: string;
@@ -54,18 +55,18 @@ export default function Category({
   const dispatch = useDispatch();
   const router = useRouter();
   const { dataPickUpAndDropOff } = useSelector(
-    (state: RootState) => state.product
+    (state: RootState) => state.product,
   );
   const [page, setPage] = useState<number>(1);
   const [valueCheckBoxType, setValueCheckBoxType] = useState<string[]>([]);
   const [valueCheckBoxCapacity, setValueCheckBoxCapacity] = useState<string[]>(
-    []
+    [],
   );
   const [totalListCar, setTotalListCar] = useState<number>(
-    list?.pagination?.total
+    list?.pagination?.total,
   );
   const [listCarCategory, setListCarCategory] = useState<DataCardCar[]>(
-    list?.items
+    list?.items,
   );
   const [priceMax, setPriceMax] = useState<number>(0);
   const [listFilterTag, setListFilterTag] = useState<FilterTag>();
@@ -88,8 +89,50 @@ export default function Category({
 
   const todayNow = new Date();
   const urlAPI = process.env.NEXT_PUBLIC_URL_API;
-  const paramsUrl = `${pickup_location_id ? `&pickup_location_id=${pickup_location_id}` : ""}${pickup_date ? `&pickup_date=${dayjs(pickup_date).toISOString()}` : ""}${dropoff_location_id ? `&dropoff_location_id=${dropoff_location_id}` : ""}${dropoff_date ? `&dropoff_date=${dayjs(dropoff_date).toISOString()}` : ""}`;
-  const paramsUrlPickUpAndDropOff = `${pickup_location_id ? `&pickup_location_id=${pickup_location_id}` : ""}${pickup_date ? `&pickup_date=${dayjs(pickup_date).format("MM/DD/YYYY")}` : ""}${dropoff_location_id ? `&dropoff_location_id=${dropoff_location_id}` : ""}${dropoff_date ? `&dropoff_date=${dayjs(dropoff_date).format("MM/DD/YYYY")}` : ""}`;
+
+  const buildCategoryRoute = (nextValues?: {
+    type_ids?: string;
+    capacities?: string;
+    max_price?: string;
+    search?: string;
+    pickup_location_id?: string;
+    pickup_date?: string;
+    dropoff_location_id?: string;
+    dropoff_date?: string;
+  }) =>
+    appendQueryString(`/${params.lang}/category`, {
+      type_ids: nextValues?.type_ids ?? (type_ids || undefined),
+      capacities: nextValues?.capacities ?? (capacities || undefined),
+      max_price: nextValues?.max_price ?? (max_price || undefined),
+      search: nextValues?.search ?? (search || undefined),
+      pickup_location_id:
+        nextValues?.pickup_location_id ?? (pickup_location_id || undefined),
+      pickup_date:
+        nextValues?.pickup_date ??
+        (pickup_date ? dayjs(pickup_date).toISOString() : undefined),
+      dropoff_location_id:
+        nextValues?.dropoff_location_id ?? (dropoff_location_id || undefined),
+      dropoff_date:
+        nextValues?.dropoff_date ??
+        (dropoff_date ? dayjs(dropoff_date).toISOString() : undefined),
+    });
+
+  const paramsUrl = appendQueryString("", {
+    pickup_location_id: pickup_location_id || undefined,
+    pickup_date: pickup_date ? dayjs(pickup_date).toISOString() : undefined,
+    dropoff_location_id: dropoff_location_id || undefined,
+    dropoff_date: dropoff_date ? dayjs(dropoff_date).toISOString() : undefined,
+  });
+  const paramsUrlPickUpAndDropOff = appendQueryString("", {
+    pickup_location_id: pickup_location_id || undefined,
+    pickup_date: pickup_date
+      ? dayjs(pickup_date).format("MM/DD/YYYY")
+      : undefined,
+    dropoff_location_id: dropoff_location_id || undefined,
+    dropoff_date: dropoff_date
+      ? dayjs(dropoff_date).format("MM/DD/YYYY")
+      : undefined,
+  });
 
   useEffect(() => {
     if (pickup_location_id) {
@@ -121,7 +164,7 @@ export default function Category({
           pickup_date: pickup_date ? pickup_date : "",
           dropoff_location_id: dropoff_location_id ? dropoff_location_id : "",
           dropoff_date: dropoff_date ? dropoff_date : "",
-        })
+        }),
       );
     }
   }, [pickup_location_id, pickup_date, dropoff_location_id, dropoff_date]);
@@ -186,14 +229,27 @@ export default function Category({
     // eslint-disable-next-line no-useless-catch
     try {
       const res = await fetch(
-        `${urlAPI}/v1/cars?limit=9&offset=${page}${type_ids ? `&type_ids=${type_ids}` : ""}${capacities ? `&capacities=${capacities}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${pickup_location_id ? `&pickup_location_id=${pickup_location_id}` : ""}${paramsUrlPickUpAndDropOff}`,
+        appendQueryString(`${urlAPI}/v1/cars?limit=9&offset=${page}`, {
+          type_ids: type_ids || undefined,
+          capacities: capacities || undefined,
+          max_price: max_price || undefined,
+          search: search || undefined,
+          pickup_location_id: pickup_location_id || undefined,
+          pickup_date: pickup_date
+            ? dayjs(pickup_date).format("MM/DD/YYYY")
+            : undefined,
+          dropoff_location_id: dropoff_location_id || undefined,
+          dropoff_date: dropoff_date
+            ? dayjs(dropoff_date).format("MM/DD/YYYY")
+            : undefined,
+        }),
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
             "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
           },
-        }
+        },
       );
       const list = await res.json();
       setListCarCategory(list.data.items);
@@ -217,60 +273,67 @@ export default function Category({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChangeValueCheckBoxCapacity = (
     checked: boolean,
-    name: string
+    name: string,
   ) => {
-    if (checked) {
-      const arrayTemp = [...valueCheckBoxCapacity, name];
-      setPage(1);
-      setValueCheckBoxCapacity([...valueCheckBoxCapacity, name]);
-      router.push(
-        `/${params.lang}/category?capacities=${arrayTemp}${type_ids ? `&type_ids=${type_ids}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrl}`,
-        { scroll: false }
-      );
-    } else {
-      setPage(1);
-      const arr = valueCheckBoxCapacity.filter((item) => !item.includes(name));
-      setValueCheckBoxCapacity(arr);
-      router.push(
-        `/${params.lang}/category?capacities=${arr}${type_ids ? `&type_ids=${type_ids}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrl}`,
-        { scroll: false }
-      );
-    }
+    const nextCapacityValues = checked
+      ? [...valueCheckBoxCapacity, name]
+      : valueCheckBoxCapacity.filter((item) => !item.includes(name));
+
+    setPage(1);
+    setValueCheckBoxCapacity(nextCapacityValues);
+    router.push(
+      buildCategoryRoute({
+        capacities: nextCapacityValues.join(",") || undefined,
+      }),
+      { scroll: false },
+    );
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChangeValueCheckBoxType = (checked: boolean, name: string) => {
-    if (checked) {
-      const arrayTemp = [...valueCheckBoxType, name];
-      setPage(1);
-      setValueCheckBoxType([...valueCheckBoxType, name]);
-      router.push(
-        `/${params.lang}/category?${arrayTemp ? `type_ids=${arrayTemp}` : ""}${capacities ? `&capacities=${capacities}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrl}`,
-        { scroll: false }
-      );
-    } else {
-      setPage(1);
-      const arr = valueCheckBoxType.filter((item) => !item.includes(name));
-      setValueCheckBoxType(arr);
-      router.push(
-        `/${params.lang}/category?${arr ? `type_ids=${arr}` : ""}${capacities ? `&capacities=${capacities}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrl}`,
-        { scroll: false }
-      );
-    }
+    const nextTypeValues = checked
+      ? [...valueCheckBoxType, name]
+      : valueCheckBoxType.filter((item) => !item.includes(name));
+
+    setPage(1);
+    setValueCheckBoxType(nextTypeValues);
+    router.push(
+      buildCategoryRoute({
+        type_ids: nextTypeValues.join(",") || undefined,
+      }),
+      { scroll: false },
+    );
   };
 
   const handleChangeCommited = (
     event: React.SyntheticEvent | Event,
-    newValue: string
+    newValue: string,
   ) => {
     router.push(
-      `/${params.lang}/category?${capacities ? `capacities=${capacities}` : ""}${type_ids ? `&type_ids=${type_ids}` : ""}&max_price=${newValue}${search ? `&search=${search}` : ""}${paramsUrlPickUpAndDropOff}`,
-      { scroll: false }
+      appendQueryString(`/${params.lang}/category`, {
+        capacities: capacities || undefined,
+        type_ids: type_ids || undefined,
+        max_price: newValue,
+        search: search || undefined,
+        pickup_location_id: pickup_location_id || undefined,
+        pickup_date: pickup_date
+          ? dayjs(pickup_date).format("MM/DD/YYYY")
+          : undefined,
+        dropoff_location_id: dropoff_location_id || undefined,
+        dropoff_date: dropoff_date
+          ? dayjs(dropoff_date).format("MM/DD/YYYY")
+          : undefined,
+      }),
+      { scroll: false },
     );
   };
 
   const handleFindCar = () => {
-    const paramsUrl = `${watch("pickup_location_id") ? `&pickup_location_id=${watch("pickup_location_id")}` : ""}${watch("pickup_date") ? `&pickup_date=${dayjs(watch("pickup_date")).toISOString()}` : `&pickup_date=${dayjs(todayNow).toISOString()}`}${watch("dropoff_location_id") ? `&dropoff_location_id=${watch("dropoff_location_id")}` : ""}${watch("dropoff_date") ? `&dropoff_date=${dayjs(watch("dropoff_date")).toISOString()}` : `&dropoff_date=${dayjs(todayNow).toISOString()}`}`;
+    const pickupLocationId = watch("pickup_location_id") || undefined;
+    const pickupDate = dayjs(watch("pickup_date") || todayNow).toISOString();
+    const dropoffLocationId = watch("dropoff_location_id") || undefined;
+    const dropoffDate = dayjs(watch("dropoff_date") || todayNow).toISOString();
+
     if (
       watch("pickup_location_id") ||
       watch("pickup_date") ||
@@ -279,25 +342,26 @@ export default function Category({
     ) {
       dispatch(
         saveDataPickUpAndDropOff({
-          pickup_location_id: watch("pickup_location_id")
-            ? watch("pickup_location_id")
-            : "",
+          pickup_location_id: pickupLocationId || "",
           pickup_date: watch("pickup_date")
             ? dayjs(watch("pickup_date")).toString()
             : "",
-          dropoff_location_id: watch("dropoff_location_id")
-            ? watch("dropoff_location_id")
-            : "",
+          dropoff_location_id: dropoffLocationId || "",
           dropoff_date: watch("dropoff_date")
             ? dayjs(watch("dropoff_date")).toString()
             : "",
-        })
+        }),
       );
     }
 
     router.push(
-      `/${params.lang}/category?${capacities ? `capacities=${capacities}` : ""}${type_ids ? `&type_ids=${type_ids}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrl}`,
-      { scroll: true }
+      buildCategoryRoute({
+        pickup_location_id: pickupLocationId,
+        pickup_date: pickupDate,
+        dropoff_location_id: dropoffLocationId,
+        dropoff_date: dropoffDate,
+      }),
+      { scroll: true },
     );
   };
 

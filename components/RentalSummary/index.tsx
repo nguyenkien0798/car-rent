@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import BgImage from "/public/images/bg_rental_car_2.png";
+import BgImage from "../../public/images/bg_rental_car_2.png";
 import { Rating, TextField } from "@mui/material";
 import { getDictionary } from "@/get-dictionary";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,12 +20,12 @@ const styleInput = {
     paddingTop: "16px",
     paddingBottom: "16px",
     "&::placeholder": {
-      color: '#90A3BF',
+      color: "#90A3BF",
       opacity: 1,
-      fontSize: '14px',
-      lineHeight: '21px',
-      fontWeight: '500'
-    }
+      fontSize: "14px",
+      lineHeight: "21px",
+      fontWeight: "500",
+    },
   },
   "& .MuiInputBase-root": {
     borderRadius: "10px !important",
@@ -56,7 +56,7 @@ export default function RentalSummary({
 }) {
   const dispatch = useDispatch();
   const { ordersSummary, errorRentalSummary } = useSelector(
-    (state: RootState) => state.payment
+    (state: RootState) => state.payment,
   );
   const [valueCoupons, setValueCoupons] = useState<string>("");
   const [promoCode, setPromoCode] = useState<string>("");
@@ -84,7 +84,7 @@ export default function RentalSummary({
     if (promoCode) {
       handleChangeCoupons(promoCode);
     }
-  }, [promoCode])
+  }, [promoCode]);
 
   useEffect(() => {
     if (accessToken) {
@@ -101,7 +101,7 @@ export default function RentalSummary({
                 : dayjs(today).format("MM/DD/YYYY"),
             },
           ],
-        })
+        }),
       );
     }
   }, [watch("pickup_date"), watch("dropoff_date")]);
@@ -129,7 +129,7 @@ export default function RentalSummary({
     const dataSummary = await res.json();
 
     if (dataSummary.message === "Success") {
-      setPromoCode(valueCoupons)
+      setPromoCode(valueCoupons);
       dispatch(
         getOrdersSummary({
           items: [
@@ -140,7 +140,7 @@ export default function RentalSummary({
             },
           ],
           coupon_code: valueCoupons,
-        })
+        }),
       );
       Notify({ message: dictionary.payment.messageCoupon, type: "success" });
     } else {

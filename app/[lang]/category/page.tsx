@@ -1,71 +1,145 @@
+import type { Metadata } from "next";
 import Category from "@/components/Category";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { DataCardCar } from "@/types/product";
+import { customFetch } from "@/services/http";
 import dayjs from "dayjs";
 import React, { Suspense } from "react";
 
-const urlAPI = process.env.NEXT_PUBLIC_URL_API;
+const buildCarListQuery = (params: {
+  offset: number;
+  type_ids?: string;
+  capacities?: string;
+  max_price?: string;
+  search?: string;
+  pickup_location_id?: string;
+  pickup_date?: string;
+  dropoff_location_id?: string;
+  dropoff_date?: string;
+  lang: Locale;
+}) => ({
+  limit: 9,
+  offset: params.offset,
+  type_ids: params.type_ids || undefined,
+  capacities: params.capacities || undefined,
+  max_price: params.max_price || undefined,
+  search: params.search || undefined,
+  pickup_location_id: params.pickup_location_id || undefined,
+  pickup_date: params.pickup_date
+    ? dayjs(params.pickup_date).format("MM/DD/YYYY")
+    : undefined,
+  dropoff_location_id: params.dropoff_location_id || undefined,
+  dropoff_date: params.dropoff_date
+    ? dayjs(params.dropoff_date).format("MM/DD/YYYY")
+    : undefined,
+});
 
-export async function generateMetadata({ params, searchParams: {
-  type_ids,
-  capacities,
-  search,
-  max_price,
-  pickup_date,
-  pickup_location_id,
-  dropoff_date,
-  dropoff_location_id,
-}, }: { params: { lang: Locale, car_id: string }; searchParams: {
-  type_ids: string;
-  capacities: string;
-  search: string;
-  max_price: string;
-  pickup_location_id: string;
-  pickup_date: string;
-  dropoff_location_id: string;
-  dropoff_date: string;
-}; }) {
-  const paramsUrlPickUpAndDropOff = `${pickup_location_id ? `&pickup_location_id=${pickup_location_id}` : ""}${pickup_date ? `&pickup_date=${dayjs(pickup_date).format('MM/DD/YYYY')}` : ""}${dropoff_location_id ? `&dropoff_location_id=${dropoff_location_id}` : ""}${dropoff_date ? `&dropoff_date=${dayjs(dropoff_date).format('MM/DD/YYYY')}` : ""}`
-  const listCarCategory = async () => {
-    // eslint-disable-next-line no-useless-catch
-    try {
-      const response = await fetch(
-        `${urlAPI}/v1/cars?limit=9&offset=1${type_ids ? `&type_ids=${type_ids}` : ""}${capacities ? `&capacities=${capacities}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrlPickUpAndDropOff}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === 'en' ? 'en-US' : 'vi'}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
-    } catch (error) {
-      throw error;
-    }
-  }
-  const listCar = await listCarCategory();
+const fetchCarsByCategory = async (params: {
+  offset: number;
+  type_ids?: string;
+  capacities?: string;
+  max_price?: string;
+  search?: string;
+  pickup_location_id?: string;
+  pickup_date?: string;
+  dropoff_location_id?: string;
+  dropoff_date?: string;
+  lang: Locale;
+}) => {
+  return customFetch<{
+    data: {
+      items: DataCardCar[];
+      pagination: { total: number; limit: number; offset: number };
+    };
+  }>("/v1/cars", {
+    method: "GET",
+    query: buildCarListQuery(params),
+    lang: params.lang === "en" ? "en" : "vi",
+  });
+};
 
-  const imageUrl = listCar.data.items.map((item: DataCardCar) => item.thumbnail_url)
-  const carType = listCar.data.items.map((item: DataCardCar) => item.type)
+export async function generateMetadata({
+  params,
+  searchParams: {
+    type_ids,
+    capacities,
+    search,
+    max_price,
+    pickup_date,
+    pickup_location_id,
+    dropoff_date,
+    dropoff_location_id,
+  },
+}: {
+  params: { lang: Locale; car_id: string };
+  searchParams: {
+    type_ids: string;
+    capacities: string;
+    search: string;
+    max_price: string;
+    pickup_location_id: string;
+    pickup_date: string;
+    dropoff_location_id: string;
+    dropoff_date: string;
+  };
+}): Promise<Metadata> {
+  const listCar = await fetchCarsByCategory({
+    offset: 1,
+    type_ids,
+    capacities,
+    max_price,
+    search,
+    pickup_location_id,
+    pickup_date,
+    dropoff_location_id,
+    dropoff_date,
+    lang: params.lang,
+  });
+
+  const imageUrl = listCar.data.items.map(
+    (item: DataCardCar) => item.thumbnail_url,
+  );
+  const carType = listCar.data.items.map((item: DataCardCar) => item.type);
+  const filters = [type_ids, capacities, search, max_price]
+    .filter(Boolean)
+    .map((value) => decodeURIComponent(value))
+    .join(" ");
+
+  const title =
+    params.lang === "en"
+      ? filters
+        ? `Car rental results for ${filters}`
+        : "Find the best car rental"
+      : filters
+        ? `Kết quả thuê xe cho ${filters}`
+        : "Tìm xe thuê phù hợp";
+
+  const description =
+    params.lang === "en"
+      ? "Browse a wide range of rental cars with filters for type, capacity, price, and pickup location."
+      : "Duyệt danh sách xe thuê đa dạng theo loại, sức chứa, giá và địa điểm nhận xe.";
 
   return {
-    title: 'Category',
-    keywords: 'Category',
-    category: carType,
+    title,
+    description,
+    keywords: ["car rental", "Morent", ...carType, filters || "vehicle rental"],
+    alternates: {
+      canonical: `/${params.lang}/category`,
+      languages: {
+        en: "/en/category",
+        vi: "/vi/category",
+      },
+    },
     openGraph: {
       type: "website",
-      title: 'Category',
-      description: 'Choose the car you want rent!',
+      title,
+      description,
       images: [...imageUrl],
-      siteName: 'Category',
-      locale: "vi_VN",
+      siteName: "Morent",
+      locale: params.lang === "en" ? "en_US" : "vi_VN",
     },
-  }
+  };
 }
 
 export default async function CategoryPage({
@@ -94,30 +168,19 @@ export default async function CategoryPage({
   };
 }) {
   const dictionary = await getDictionary(params.lang);
-  const paramsUrlPickUpAndDropOff = `${pickup_location_id ? `&pickup_location_id=${pickup_location_id}` : ""}${pickup_date ? `&pickup_date=${dayjs(pickup_date).format('MM/DD/YYYY')}` : ""}${dropoff_location_id ? `&dropoff_location_id=${dropoff_location_id}` : ""}${dropoff_date ? `&dropoff_date=${dayjs(dropoff_date).format('MM/DD/YYYY')}` : ""}`
 
-  const listCarCategory = async () => {
-    // eslint-disable-next-line no-useless-catch
-    try {
-      const response = await fetch(
-        `${urlAPI}/v1/cars?limit=9&offset=1${type_ids ? `&type_ids=${type_ids}` : ""}${capacities ? `&capacities=${capacities}` : ""}${max_price ? `&max_price=${max_price}` : ""}${search ? `&search=${search}` : ""}${paramsUrlPickUpAndDropOff}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === 'en' ? 'en-US' : 'vi'}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
-    } catch (error) {
-      throw error;
-    }
-  }
-  const listCar = await listCarCategory();
+  const listCar = await fetchCarsByCategory({
+    offset: 1,
+    type_ids,
+    capacities,
+    max_price,
+    search,
+    pickup_location_id,
+    pickup_date,
+    dropoff_location_id,
+    dropoff_date,
+    lang: params.lang,
+  });
 
   return (
     <Suspense>
@@ -131,9 +194,9 @@ export default async function CategoryPage({
           max_price={max_price && decodeURIComponent(max_price)}
           search={search && search}
           pickup_location_id={pickup_location_id}
-          pickup_date={pickup_date && pickup_date.replaceAll('%2F', '')}
+          pickup_date={pickup_date && pickup_date.replaceAll("%2F", "")}
           dropoff_location_id={dropoff_location_id}
-          dropoff_date={dropoff_date && dropoff_date.replaceAll('%2F', '')}
+          dropoff_date={dropoff_date && dropoff_date.replaceAll("%2F", "")}
         />
       </div>
     </Suspense>

@@ -4,8 +4,8 @@ import React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Locale, i18n } from "@/i18n-config";
 import Image from "next/image";
-import Vi from "/public/images/vi.jpg";
-import En from "/public/images/en.png";
+import Vi from "../../public/images/vi.jpg";
+import En from "../../public/images/en.png";
 import { Popover } from "@mui/material";
 import { setCookie } from "cookies-next";
 
@@ -27,11 +27,9 @@ const SwitchLanguage = ({ lang }: { lang: Locale }) => {
     segments[1] = locale;
 
     if (searchParams) {
-      return router.push(
-        segments.join("/") + `?${searchParams.toString()}`
-      );
+      return router.push(segments.join("/") + `?${searchParams.toString()}`);
     }
-    router.push(segments.join("/"))
+    router.push(segments.join("/"));
   };
 
   const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {

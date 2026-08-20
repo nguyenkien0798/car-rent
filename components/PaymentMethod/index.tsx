@@ -2,8 +2,8 @@ import React from "react";
 import Radio from "@mui/joy/Radio";
 import RadioGroup from "@mui/joy/RadioGroup";
 import { getDictionary } from "@/get-dictionary";
-import PaypalImage from "/public/images/PayPal.png";
-import CODImage from "/public/images/cod.png";
+import PaypalImage from "../../public/images/PayPal.png";
+import CODImage from "../../public/images/cod.png";
 import Image from "next/image";
 
 const styleRadioButton = {
@@ -31,7 +31,7 @@ export default function PaymentMethod({
   handleChangePaymentMethod,
 }: {
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
-  paymentMethod: number
+  paymentMethod: number;
   handleChangePaymentMethod: (value: number) => void;
 }) {
   return (
@@ -54,7 +54,10 @@ export default function PaymentMethod({
         </div>
 
         <div className="mt-[32px]">
-          <RadioGroup defaultValue={paymentMethod} onChange={(e) => handleChangePaymentMethod(+e.target.value)}>
+          <RadioGroup
+            defaultValue={paymentMethod}
+            onChange={(e) => handleChangePaymentMethod(+e.target.value)}
+          >
             <div className="px-[32px] py-[16px] flex items-center justify-between bg-[#F6F7F9] rounded-[10px]">
               <Radio
                 checkedIcon={

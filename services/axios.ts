@@ -43,7 +43,7 @@ instance.interceptors.response.use(
       return instance(request);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const get = async (url: string, data?: any) => {

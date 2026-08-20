@@ -2,9 +2,9 @@
 
 import React from "react";
 import Image from "next/image";
-import ImageCar from "/public/images/car.png";
-import ShadowCar from "/public/images/shadow.png";
-import Manual from "/public/images/manual.png";
+import ImageCar from "../../public/images/car.png";
+import ShadowCar from "../../public/images/shadow.png";
+import Manual from "../../public/images/manual.png";
 
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -17,6 +17,7 @@ import { Locale } from "@/i18n-config";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { getCookie, setCookie } from "cookies-next";
+import { appendQueryString } from "@/utils/helpers";
 
 const CardCar = ({
   list,
@@ -31,34 +32,42 @@ const CardCar = ({
 }) => {
   const router = useRouter();
   const { dataPickUpAndDropOff } = useSelector(
-    (state: RootState) => state.product
+    (state: RootState) => state.product,
   );
 
   const redirectPayment = () => {
     router.push(
-      `/${params.lang}/payment?cars_id=${list.id}${dataPickUpAndDropOff?.pickup_location_id ? `&pickup_location_id=${dataPickUpAndDropOff.pickup_location_id}` : ""}${dataPickUpAndDropOff?.pickup_date ? `&pickup_date=${dataPickUpAndDropOff.pickup_date}` : ""}${dataPickUpAndDropOff?.dropoff_location_id ? `&dropoff_location_id=${dataPickUpAndDropOff.dropoff_location_id}`: ""}${dataPickUpAndDropOff?.dropoff_date ? `&dropoff_date=${dataPickUpAndDropOff.dropoff_date}` : ""}`
+      appendQueryString(`/${params.lang}/payment`, {
+        cars_id: list.id,
+        pickup_location_id:
+          dataPickUpAndDropOff?.pickup_location_id || undefined,
+        pickup_date: dataPickUpAndDropOff?.pickup_date || undefined,
+        dropoff_location_id:
+          dataPickUpAndDropOff?.dropoff_location_id || undefined,
+        dropoff_date: dataPickUpAndDropOff?.dropoff_date || undefined,
+      }),
     );
   };
 
-  const recentCar = getCookie('recent_car')
+  const recentCar = getCookie("recent_car");
 
-  const handleRedirectCarDetail = () => {   
+  const handleRedirectCarDetail = () => {
     if (recentCar) {
-      const arr = [...JSON.parse(recentCar)]
-      arr.unshift(list)
-      setCookie('recent_car', JSON.stringify(arr))
+      const arr = [...JSON.parse(recentCar)];
+      arr.unshift(list);
+      setCookie("recent_car", JSON.stringify(arr));
     } else {
-      const arrayTemp = []
-      arrayTemp.push(list)
-      setCookie('recent_car', JSON.stringify(arrayTemp))
+      const arrayTemp = [];
+      arrayTemp.push(list);
+      setCookie("recent_car", JSON.stringify(arrayTemp));
     }
-    router.push(`/${params.lang}/cars/${list.id}`)
-  }
+    router.push(`/${params.lang}/cars/${list.id}`);
+  };
 
   return (
     <div className="">
       <div
-        className={`mh:block xs:hidden p-[24px] ${isListCategory && "1xl:w-[320px]"} ${params.lang === 'vi' ?  "mh:w-[314px]" : "mh:w-[306px]"} h-fit bg-white rounded-[10px]`}
+        className={`mh:block xs:hidden p-[24px] ${isListCategory && "1xl:w-[320px]"} ${params.lang === "vi" ? "mh:w-[314px]" : "mh:w-[306px]"} h-fit bg-white rounded-[10px]`}
       >
         <div className="flex justify-between">
           <div>

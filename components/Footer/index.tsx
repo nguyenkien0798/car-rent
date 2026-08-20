@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { getDictionary } from "../../get-dictionary";
-import Logo from "/public/images/Logo.png";
+import Logo from "../../public/images/Logo.png";
 import Link from "next/link";
 
 function Footer({

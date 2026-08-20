@@ -7,7 +7,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import { useRouter } from "next/navigation";
-import NoData from '/public/images/no-data.png'
+import NoData from "../../public/images/no-data.png";
 
 export default function OrderDetail({
   dictionary,
@@ -226,13 +226,15 @@ export default function OrderDetail({
               {dictionary.orders.download}
             </button>
           </div>
-        </div>  
+        </div>
       ) : (
         <div className="my-[64px] max-w-[375px] mx-auto">
           <div className="flex justify-center">
             <img src={NoData.src} alt="no-data" />
           </div>
-          <p className="mt-8 text-center text-[18px] font-semibold">{dictionary.common.noData}</p>
+          <p className="mt-8 text-center text-[18px] font-semibold">
+            {dictionary.common.noData}
+          </p>
         </div>
       )}
     </div>
