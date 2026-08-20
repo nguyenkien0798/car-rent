@@ -182,23 +182,63 @@ export default async function CategoryPage({
     lang: params.lang,
   });
 
+  const categorySchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name:
+      params.lang === "en"
+        ? `Car rental results${search ? ` for ${search}` : ""}`
+        : `Kết quả thuê xe${search ? ` cho ${search}` : ""}`,
+    description:
+      params.lang === "en"
+        ? "Browse available rental cars by type, seating capacity, price, and pickup details."
+        : "Duyệt danh sách xe thuê theo loại, sức chứa, giá và thông tin nhận xe.",
+    numberOfItems: listCar?.data?.pagination?.total ?? 0,
+    itemListElement: (listCar?.data?.items ?? []).map((car, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Car",
+        name: car.name,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://morent.com"}/${params.lang}/cars/${car.id}`,
+        image: car.thumbnail_url,
+        offers: {
+          "@type": "Offer",
+          price: car.sale_price || car.price,
+          priceCurrency: "USD",
+        },
+      },
+    })),
+  };
+
   return (
     <Suspense>
-      <div className="max-w-[1440px] mx-auto">
-        <Category
-          dictionary={dictionary.common}
-          params={params}
-          list={listCar?.data}
-          type_ids={type_ids && decodeURIComponent(type_ids)}
-          capacities={capacities && decodeURIComponent(capacities)}
-          max_price={max_price && decodeURIComponent(max_price)}
-          search={search && search}
-          pickup_location_id={pickup_location_id}
-          pickup_date={pickup_date && pickup_date.replaceAll("%2F", "")}
-          dropoff_location_id={dropoff_location_id}
-          dropoff_date={dropoff_date && dropoff_date.replaceAll("%2F", "")}
+      <main className="max-w-[1440px] mx-auto">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(categorySchema) }}
         />
-      </div>
+        <h1 className="sr-only">
+          {params.lang === "en"
+            ? "Find a rental car by type, capacity and price"
+            : "Tìm xe thuê theo loại, sức chứa và giá"}
+        </h1>
+        <div className="max-w-[1440px] mx-auto">
+          <Category
+            dictionary={dictionary.common}
+            params={params}
+            list={listCar?.data}
+            type_ids={type_ids && decodeURIComponent(type_ids)}
+            capacities={capacities && decodeURIComponent(capacities)}
+            max_price={max_price && decodeURIComponent(max_price)}
+            search={search && search}
+            pickup_location_id={pickup_location_id}
+            pickup_date={pickup_date && pickup_date.replaceAll("%2F", "")}
+            dropoff_location_id={dropoff_location_id}
+            dropoff_date={dropoff_date && dropoff_date.replaceAll("%2F", "")}
+          />
+        </div>
+      </main>
     </Suspense>
   );
 }

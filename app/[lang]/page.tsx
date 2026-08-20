@@ -16,6 +16,7 @@ export async function generateMetadata({
   params: { lang: Locale };
 }): Promise<Metadata> {
   const responseListRecommendCar = async () => {
+    // eslint-disable-next-line no-useless-catch
     try {
       const response = await fetch(
         `${urlAPI}/v1/cars?filter=recommended&limit=8&page=1`,
@@ -127,8 +128,41 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
   };
   const listPopularCar = await responseListPopularCar();
 
+  const homepageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name:
+      params.lang === "en"
+        ? "Morent | Car Rental in Vietnam"
+        : "Morent | Thuê xe tại Việt Nam",
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://morent.com"}/${params.lang}`,
+    description:
+      params.lang === "en"
+        ? "Find the best car rental deals in Vietnam with Morent. Easy booking, flexible daily rentals, and trusted vehicles for every trip."
+        : "Tìm xe thuê tốt nhất tại Việt Nam cùng Morent. Đặt xe dễ dàng, linh hoạt theo ngày và dịch vụ tin cậy cho mọi chuyến đi.",
+    publisher: {
+      "@type": "Organization",
+      name: "Morent",
+      logo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://morent.com"}/images/icon_car.png`,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${process.env.NEXT_PUBLIC_SITE_URL || "https://morent.com"}/${params.lang}/category?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
-    <div className="py-[32px]">
+    <main className="py-[32px]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homepageSchema) }}
+      />
+      <h1 className="sr-only">
+        {params.lang === "en"
+          ? "Morent | Premium car rental in Vietnam"
+          : "Morent | Thuê xe cao cấp tại Việt Nam"}
+      </h1>
       <AdvertisingBanner dictionary={dictionary.banner} />
       {/* Filter Pick up and Drop off */}
       <FilterFindCar dictionary={dictionary.common} params={params.lang} />
@@ -144,6 +178,6 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         params={params}
         listCar={listRecommendCar.data}
       />
-    </div>
+    </main>
   );
 }
