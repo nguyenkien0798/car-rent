@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { customFetch } from "@/services/http";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://morent.com";
@@ -61,21 +62,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   try {
-    const response = await fetch(`${apiBaseUrl}/v1/cars?limit=50&page=1`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
+    const data = await customFetch<{
+      data?: { items?: Array<{ id?: number; updated_at?: string }> };
+    }>("/v1/cars", {
+      query: { limit: 50, page: 1 },
     });
-
-    if (!response.ok) {
-      return baseRoutes;
-    }
-
-    const data = await response.json();
     const items = Array.isArray(data?.data?.items) ? data.data.items : [];
 
-    const carRoutes: MetadataRoute.Sitemap = items.flatMap((item: { id?: number; updated_at?: string }) => {
+    const carRoutes: MetadataRoute.Sitemap = items.flatMap((item) => {
       if (!item.id) {
         return [];
       }

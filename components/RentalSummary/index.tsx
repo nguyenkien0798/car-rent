@@ -11,6 +11,7 @@ import { RootState } from "@/redux/store";
 import dayjs from "dayjs";
 import { getCookie } from "cookies-next";
 import Notify from "../Notify";
+import { customFetch } from "@/services/http";
 
 const styleInput = {
   "& .MuiInputBase-input": {
@@ -65,8 +66,6 @@ export default function RentalSummary({
 
   const accessToken = getCookie("access_token");
   const locale = getCookie("locale");
-  const urlAPI = process.env.NEXT_PUBLIC_URL_API;
-
   useEffect(() => {
     if (errorRentalSummary?.error_id) {
       Notify({ message: errorRentalSummary.message, type: "error" });
@@ -107,26 +106,24 @@ export default function RentalSummary({
   }, [watch("pickup_date"), watch("dropoff_date")]);
 
   const handleSubmitCoupons = async () => {
-    const res = await fetch(`${urlAPI}/v1/orders/preview`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        "Accept-Language": `${locale}`,
+    const dataSummary = await customFetch<{ message: string }>(
+      "/v1/orders/preview",
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        lang: locale === "en" ? "en" : "vi",
+        body: {
+          items: [
+            {
+              id: cars_id,
+              pickup_date: dayjs(watch("pickup_date")).format("MM/DD/YYYY"),
+              dropoff_date: dayjs(watch("dropoff_date")).format("MM/DD/YYYY"),
+            },
+          ],
+          coupon_code: valueCoupons,
+        },
       },
-      body: JSON.stringify({
-        items: [
-          {
-            id: cars_id,
-            pickup_date: dayjs(watch("pickup_date")).format("MM/DD/YYYY"),
-            dropoff_date: dayjs(watch("dropoff_date")).format("MM/DD/YYYY"),
-          },
-        ],
-        coupon_code: valueCoupons,
-      }),
-    });
-
-    const dataSummary = await res.json();
+    );
 
     if (dataSummary.message === "Success") {
       setPromoCode(valueCoupons);

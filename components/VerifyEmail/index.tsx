@@ -7,6 +7,7 @@ import EmailFailed from "../../public/images/email-failed.png";
 import { getDictionary } from "@/get-dictionary";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Locale } from "@/i18n-config";
+import { customFetch } from "@/services/http";
 
 export default function VerifyEmail({
   dictionary,
@@ -20,8 +21,6 @@ export default function VerifyEmail({
   const token = searchParams.get("token");
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isVerifyEmail, setIsVerifyEmail] = React.useState<string>("");
-  const urlAPI = process.env.NEXT_PUBLIC_URL_API;
-
   useEffect(() => {
     if (token) {
       verifyToken();
@@ -30,15 +29,10 @@ export default function VerifyEmail({
 
   const verifyToken = async () => {
     setIsLoading(true);
-    const res = await fetch(`${urlAPI}/v1/auth/verify/email?token=${token}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept-Language": `${lang === "en" ? "en-US" : "vi"}`,
-      },
+    const data = await customFetch<string>("/v1/auth/verify/email", {
+      query: { token },
+      lang,
     });
-
-    const data = await res.json();
 
     if (data === "errors.jwt expired") {
       setIsVerifyEmail("error");

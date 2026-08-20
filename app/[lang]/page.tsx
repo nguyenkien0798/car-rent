@@ -6,9 +6,10 @@ import PopularCar from "@/components/PopularCar";
 import RecommendationCar from "@/components/RecommendationCar";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
-import { DataCardCar } from "@/types/product";
+import { DataCardCar, ListCar } from "@/types/product";
+import { customFetch } from "@/services/http";
 
-const urlAPI = process.env.NEXT_PUBLIC_URL_API;
+type ListCarResponse = { data: ListCar };
 
 export async function generateMetadata({
   params,
@@ -18,20 +19,10 @@ export async function generateMetadata({
   const responseListRecommendCar = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(
-        `${urlAPI}/v1/cars?filter=recommended&limit=8&page=1`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      return customFetch<ListCarResponse>(`/v1/cars`, {
+        query: { filter: "recommended", limit: 8, page: 1 },
+        lang: params.lang,
+      });
     } catch (error) {
       throw error;
     }
@@ -85,20 +76,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
   const responseListRecommendCar = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(
-        `${urlAPI}/v1/cars?filter=recommended&limit=8&page=1`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      return customFetch<ListCarResponse>(`/v1/cars`, {
+        query: { filter: "recommended", limit: 8, page: 1 },
+        lang: params.lang,
+      });
     } catch (error) {
       throw error;
     }
@@ -108,20 +89,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
   const responseListPopularCar = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(
-        `${urlAPI}/v1/cars?filter=popular&limit=4&page=1`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      return customFetch<ListCarResponse>(`/v1/cars`, {
+        query: { filter: "popular", limit: 4, page: 1 },
+        lang: params.lang,
+      });
     } catch (error) {
       throw error;
     }

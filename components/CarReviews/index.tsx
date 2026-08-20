@@ -6,51 +6,47 @@ import { getDictionary } from "@/get-dictionary";
 import { useEffect, useState } from "react";
 import { CarReview, ListCarReview } from "@/types/product";
 import { Locale } from "@/i18n-config";
+import { customFetch } from "@/services/http";
 
 export default function CarReviews({
   dictionary,
   params,
   car_id,
-  listCarReview
+  listCarReview,
 }: {
   dictionary: Awaited<ReturnType<typeof getDictionary>>["common"];
   params: Locale;
   car_id: string;
-  listCarReview: ListCarReview
+  listCarReview: ListCarReview;
 }) {
   const [listDataCarReview, setListDataCarReview] = useState<CarReview[]>([]);
   const [totalCarReview, setTotalCarReview] = useState<number>(0);
-  const [page, setPage] = useState<number>(1)
-
-  const urlAPI = process.env.NEXT_PUBLIC_URL_API;
+  const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
     if (listCarReview) {
-      setListDataCarReview(listCarReview.items)
-      setTotalCarReview(listCarReview.total_review)
+      setListDataCarReview(listCarReview.items);
+      setTotalCarReview(listCarReview.total_review);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (page > 1) {
-      fetchData()
+      fetchData();
     }
-  }, [page])
+  }, [page]);
 
   const getData = async () => {
-    const responseCarReview = await fetch(`${urlAPI}/v1/reviews?car_id=${car_id}&limit=4&offset=${page}`,
+    const responseCarReview = await customFetch<{ data: ListCarReview }>(
+      "/v1/reviews",
       {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": `${params}`,
-        }
-      }    
-    )
-  const listCarReview = await responseCarReview.json()
+        query: { car_id, limit: 4, offset: page },
+        lang: params,
+      },
+    );
 
-  return listCarReview.data
-  }
+    return responseCarReview.data;
+  };
 
   const fetchData = async () => {
     const res = await getData();
@@ -60,8 +56,8 @@ export default function CarReviews({
   };
 
   const handleShowMore = () => {
-    setPage(page + 1)
-  }
+    setPage(page + 1);
+  };
 
   return (
     <div className="pb-[32px] xs:px-[16px] sm:px-[24px] 1xl:px-0">
@@ -79,50 +75,52 @@ export default function CarReviews({
         <div className="mt-[32px] mb-[24px]">
           {listDataCarReview?.map((review, index) => (
             <div key={review.user_id + index}>
-            <div className="flex justify-between items-center">
-              <div className="flex xs:gap-2 sm:gap-4">
-                <img
-                  src={review.avatar_url}
-                  alt="avatar"
-                  className="xs:w-[44px] sm:w-[56px] xs:h-[44px] sm:h-[56px] rounded-[50%]"
-                />
-                <div>
-                  <p className="mb-[8px] xs:text-[16px] sm:text-[20px] text-[#1A202C] font-bold xs:leading-[24px] sm:leading-[30px]">
-                    {review.user_name}
+              <div className="flex justify-between items-center">
+                <div className="flex xs:gap-2 sm:gap-4">
+                  <img
+                    src={review.avatar_url}
+                    alt="avatar"
+                    className="xs:w-[44px] sm:w-[56px] xs:h-[44px] sm:h-[56px] rounded-[50%]"
+                  />
+                  <div>
+                    <p className="mb-[8px] xs:text-[16px] sm:text-[20px] text-[#1A202C] font-bold xs:leading-[24px] sm:leading-[30px]">
+                      {review.user_name}
+                    </p>
+                    <p className="xs:text-[12px] sm:text-[14px] text-[#90A3BF] font-medium xs:leading-[15px] sm:leading-[21px]">
+                      {review.user_job}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <p className="pt-[8px] text-right xs:text-[12px] sm:text-[14px] text-[#90A3BF] font-medium xs:leading-[15px] sm:leading-[21px]">
+                    {review.created_at}
                   </p>
-                  <p className="xs:text-[12px] sm:text-[14px] text-[#90A3BF] font-medium xs:leading-[15px] sm:leading-[21px]">
-                    {review.user_job}
-                  </p>
+                  <Rating
+                    name="read-only"
+                    value={review.rating}
+                    readOnly
+                    sx={{
+                      "&.MuiRating-root": {
+                        paddingTop: "4px",
+                        fontSize: { sm: "24px", xs: "18px" },
+                      },
+                    }}
+                  />
                 </div>
               </div>
-              <div className="flex flex-col">
-                <p className="pt-[8px] text-right xs:text-[12px] sm:text-[14px] text-[#90A3BF] font-medium xs:leading-[15px] sm:leading-[21px]">
-                  {review.created_at}
+              <div className="xs:ml-[52px] sm:ml-[72px] mt-[16px]">
+                <p className="text-[14px] text-[#596780] font-normal leading-[28px]">
+                  {review.content}
                 </p>
-                <Rating
-                  name="read-only"
-                  value={review.rating}
-                  readOnly
-                  sx={{
-                    "&.MuiRating-root": {
-                      paddingTop: "4px",
-                      fontSize: { sm: "24px", xs: "18px" },
-                    },
-                  }}
-                />
               </div>
             </div>
-            <div className="xs:ml-[52px] sm:ml-[72px] mt-[16px]">
-              <p className="text-[14px] text-[#596780] font-normal leading-[28px]">
-                {review.content}
-              </p>
-            </div>
-          </div>
           ))}
         </div>
 
         {/* Button Show All */}
-        {listDataCarReview?.length >= totalCarReview ? "" : (
+        {listDataCarReview?.length >= totalCarReview ? (
+          ""
+        ) : (
           <div onClick={handleShowMore} className="flex justify-center">
             <div className="flex gap-2 cursor-pointer">
               <p className="text-[16px] text-[#90A3BF] font-semibold leading-[24px]">

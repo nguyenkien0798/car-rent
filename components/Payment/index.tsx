@@ -23,6 +23,7 @@ import {
   usePayPalScriptReducer,
 } from "@paypal/react-paypal-js";
 import { post } from "@/services/axios";
+import { customFetch } from "@/services/http";
 import { PaymentInfo } from "@/types/payment";
 import {
   CreateOrderData,
@@ -36,7 +37,7 @@ export default function Payment({
   pickup_location_id,
   pickup_date,
   dropoff_location_id,
-  dropoff_date
+  dropoff_date,
 }: {
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   cars_id: string;
@@ -53,17 +54,17 @@ export default function Payment({
   const [subTotal, setSubTotal] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [coupons, setCoupons] = useState<string>("");
-  const [isLoadingButtonSubmit, setIsLoadingButtonSubmit] = useState<boolean>(false)
+  const [isLoadingButtonSubmit, setIsLoadingButtonSubmit] =
+    useState<boolean>(false);
 
-  const urlApi = process.env.NEXT_PUBLIC_URL_API;
   const accessToken = getCookie("access_token");
   const locale = getCookie("locale");
 
   useEffect(() => {
     if (!accessToken) {
-      router.back()
+      router.back();
     }
-  }, [])
+  }, []);
 
   const handleChangeSaleCarPrice = (price: number) => {
     setSaleCarPrice(price);
@@ -92,23 +93,24 @@ export default function Payment({
   const paymentInfoSchema = Yup.object()
     .shape({
       customer_name: Yup.string().required(
-        dictionary.payment.thisFieldIsRequired
+        dictionary.payment.thisFieldIsRequired,
       ),
-      phone_number: Yup.string()
-        .required(dictionary.payment.thisFieldIsRequired),
+      phone_number: Yup.string().required(
+        dictionary.payment.thisFieldIsRequired,
+      ),
       address: Yup.string().required(dictionary.payment.thisFieldIsRequired),
       city: Yup.string().required(dictionary.payment.thisFieldIsRequired),
       pickup_location_id: Yup.string().required(
-        dictionary.payment.thisFieldIsRequired
+        dictionary.payment.thisFieldIsRequired,
       ),
       pickup_date: Yup.string().required(
-        dictionary.payment.thisFieldIsRequired
+        dictionary.payment.thisFieldIsRequired,
       ),
       dropoff_location_id: Yup.string().required(
-        dictionary.payment.thisFieldIsRequired
+        dictionary.payment.thisFieldIsRequired,
       ),
       dropoff_date: Yup.string().required(
-        dictionary.payment.thisFieldIsRequired
+        dictionary.payment.thisFieldIsRequired,
       ),
     })
     .required();
@@ -119,7 +121,7 @@ export default function Payment({
     control,
     watch,
     trigger,
-    setValue
+    setValue,
   } = useForm<PaymentInfo>({
     defaultValues: {
       customer_name: "",
@@ -131,26 +133,26 @@ export default function Payment({
     mode: "all",
   });
 
-  const todayNow = new Date()
+  const todayNow = new Date();
 
   useEffect(() => {
     if (pickup_location_id) {
-      setValue('pickup_location_id', pickup_location_id)
+      setValue("pickup_location_id", pickup_location_id);
     }
     if (pickup_date) {
-      setValue('pickup_date', pickup_date)
+      setValue("pickup_date", pickup_date);
     } else {
-      setValue('pickup_date', dayjs(todayNow).toString())
+      setValue("pickup_date", dayjs(todayNow).toString());
     }
     if (dropoff_location_id) {
-      setValue('dropoff_location_id', dropoff_location_id)
+      setValue("dropoff_location_id", dropoff_location_id);
     }
     if (dropoff_date) {
-      setValue('dropoff_date', dropoff_date)
+      setValue("dropoff_date", dropoff_date);
     } else {
-      setValue('dropoff_date', dayjs(todayNow).toString())
+      setValue("dropoff_date", dayjs(todayNow).toString());
     }
-  }, [pickup_location_id, pickup_date, dropoff_location_id, dropoff_date])
+  }, [pickup_location_id, pickup_date, dropoff_location_id, dropoff_date]);
 
   const clientIdPaypal = {
     clientId: process.env.NEXT_PUBLIC_CLIENT_ID_PAYPAL ?? "",
@@ -177,9 +179,8 @@ export default function Payment({
   ]);
 
   const onSubmit = async (data: PaymentInfo) => {
-    setIsLoadingButtonSubmit(true)
-    const response = await post(`/v1/orders`, 
-    {
+    setIsLoadingButtonSubmit(true);
+    const response = await post(`/v1/orders`, {
       customer_name: data.customer_name,
       phone_number: data.phone_number,
       address: data.address,
@@ -194,21 +195,20 @@ export default function Payment({
           price: carPrice,
           sale_price: saleCarPrice,
           pickup_location_id: data.pickup_location_id,
-          pickup_date: dayjs(data.pickup_date).format('MM/DD/YYYY'),
+          pickup_date: dayjs(data.pickup_date).format("MM/DD/YYYY"),
           dropoff_location_id: data.dropoff_location_id,
-          dropoff_date: dayjs(data.dropoff_date).format('MM/DD/YYYY'),
+          dropoff_date: dayjs(data.dropoff_date).format("MM/DD/YYYY"),
         },
       ],
-    }
-    );
+    });
 
     if (response.data.error_id) {
-      setIsLoadingButtonSubmit(false)
+      setIsLoadingButtonSubmit(false);
       Notify({ message: response.data.message, type: "error" });
     }
 
     if (response.data.message === "Success") {
-      setIsLoadingButtonSubmit(false)
+      setIsLoadingButtonSubmit(false);
       Notify({
         message: `${dictionary.payment.ordersSuccessfully}`,
         type: "success",
@@ -219,7 +219,7 @@ export default function Payment({
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const createOrder = async (data: CreateOrderData) => {
-    setIsLoadingButtonSubmit(true)
+    setIsLoadingButtonSubmit(true);
     const customer_name = watch("customer_name");
     const phone_number = watch("phone_number");
     const address = watch("address");
@@ -232,43 +232,41 @@ export default function Payment({
     // Order is created on the server and the order id is returned
     // eslint-disable-next-line no-useless-catch
     try {
-      return await post(`/v1/orders`, 
-        {
-          customer_name: customer_name,
-          phone_number: phone_number,
-          address: address,
-          city: city,        
-          coupon_code: coupons ? coupons : "",
-          // subtotal: subTotal,
-          // total: totalPrice,
-          payment_method_id: paymentMethod,
-          items: [
-            {
-              id: cars_id,
-              price: carPrice,
-              sale_price: saleCarPrice,
-              pickup_location_id: pickup_location_id,
-              pickup_date: pickup_date,
-              dropoff_location_id: dropoff_location_id,
-              dropoff_date: dropoff_date,
-            },
-          ],
-        }
-        )
-          .then((response) => response.data)
-          .then((order) => {
-            if (order.message === "Success") {
-              setIsLoadingButtonSubmit(false)
-              return order.data.payment_order_id;
-            }
-            if (order.error_id) {
-              setIsLoadingButtonSubmit(false)
-              Notify({ message: order.message, type: "error" });
-            }
-          });
+      return await post(`/v1/orders`, {
+        customer_name: customer_name,
+        phone_number: phone_number,
+        address: address,
+        city: city,
+        coupon_code: coupons ? coupons : "",
+        // subtotal: subTotal,
+        // total: totalPrice,
+        payment_method_id: paymentMethod,
+        items: [
+          {
+            id: cars_id,
+            price: carPrice,
+            sale_price: saleCarPrice,
+            pickup_location_id: pickup_location_id,
+            pickup_date: pickup_date,
+            dropoff_location_id: dropoff_location_id,
+            dropoff_date: dropoff_date,
+          },
+        ],
+      })
+        .then((response) => response.data)
+        .then((order) => {
+          if (order.message === "Success") {
+            setIsLoadingButtonSubmit(false);
+            return order.data.payment_order_id;
+          }
+          if (order.error_id) {
+            setIsLoadingButtonSubmit(false);
+            Notify({ message: order.message, type: "error" });
+          }
+        });
     } catch (error: any) {
       Notify({ message: error.response.data.message, type: "error" });
-      setIsLoadingButtonSubmit(false)
+      setIsLoadingButtonSubmit(false);
       throw error;
     }
   };
@@ -277,19 +275,17 @@ export default function Payment({
     // eslint-disable-next-line no-useless-catch
     try {
       // Order is captured on the server
-    return fetch(`${urlApi}/v1/orders/payments/${data.orderID}/capture`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept-Language": `${locale}`,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        orderID: data.orderID,
-      }),
-    })
-      .then((response) => response.json())
-      .then((orderData) => {
+      return customFetch<{ message: string }>(
+        `/v1/orders/payments/${data.orderID}/capture`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+          lang: locale === "en" ? "en" : "vi",
+          body: {
+            orderID: data.orderID,
+          },
+        },
+      ).then((orderData) => {
         if (orderData.message === "Success") {
           Notify({
             message: `${dictionary.payment.paymentSuccesfully}`,
@@ -309,20 +305,17 @@ export default function Payment({
     }
   };
 
-  const onCancel = (data: Record<string, unknown>) => {
+  const onCancel = async (data: Record<string, unknown>) => {
     // eslint-disable-next-line no-useless-catch
     try {
-      return fetch(`${urlApi}/v1/orders/payments/${data.orderID}/cancel`, {
+      await customFetch(`/v1/orders/payments/${data.orderID}/cancel`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": `${locale}`,
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
+        headers: { Authorization: `Bearer ${accessToken}` },
+        lang: locale === "en" ? "en" : "vi",
+        body: {
           orderID: data.orderID,
-        }),
-      }).then((response) => response.json());
+        },
+      });
     } catch (error) {
       throw error;
     }

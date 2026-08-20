@@ -7,6 +7,7 @@ import SearchBar from "../SearchBar";
 import Persional from "../Persional";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
+import { customFetch } from "@/services/http";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentUser } from "@/redux/slice/auth";
 import { RootState } from "@/redux/store";
@@ -29,8 +30,6 @@ function Header({
   const [listFilterTag, setListFilterTag] = useState<FilterTag>();
 
   const accessToken = getCookie("access_token");
-  const urlAPI = process.env.NEXT_PUBLIC_URL_API;
-
   useEffect(() => {
     setCookie("locale", lang);
   }, []);
@@ -48,14 +47,12 @@ function Header({
   const getFilter = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const res = await fetch(`${urlAPI}/v1/car-tags`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": `${lang === "en" ? "en-US" : "vi"}`,
+      const listFilter = await customFetch<{ data: FilterTag }>(
+        "/v1/car-tags",
+        {
+          lang,
         },
-      });
-      const listFilter = await res.json();
+      );
       setListFilterTag(listFilter.data);
 
       return listFilter.data;

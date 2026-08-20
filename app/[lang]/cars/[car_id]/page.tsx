@@ -7,9 +7,15 @@ import RecentCarDetail from "@/components/RecentCarDetail";
 import RecommendationCarDetail from "@/components/RecommendationCarDetail";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
-import { ImageCarDetail } from "@/types/product";
+import {
+  CarDetail as CarDetailData,
+  ImageCarDetail,
+  ListCar,
+  ListCarReview,
+} from "@/types/product";
+import { customFetch } from "@/services/http";
 
-const urlAPI = process.env.NEXT_PUBLIC_URL_API;
+type ApiResponse<T> = { data: T };
 
 export async function generateMetadata({
   params,
@@ -19,18 +25,12 @@ export async function generateMetadata({
   const res = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(`${urlAPI}/v1/cars/${params.car_id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
+      return customFetch<ApiResponse<CarDetailData>>(
+        `/v1/cars/${params.car_id}`,
+        {
+          lang: params.lang,
         },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      );
     } catch (error) {
       throw error;
     }
@@ -81,18 +81,12 @@ export default async function CarDetailPage({
   const res = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(`${urlAPI}/v1/cars/${params.car_id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
+      return customFetch<ApiResponse<CarDetailData>>(
+        `/v1/cars/${params.car_id}`,
+        {
+          lang: params.lang,
         },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      );
     } catch (error) {
       throw error;
     }
@@ -102,20 +96,10 @@ export default async function CarDetailPage({
   const responseListCar = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(
-        `${urlAPI}/v1/cars?filter=recommended&limit=4&page=1`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      return customFetch<ApiResponse<ListCar>>(`/v1/cars`, {
+        query: { filter: "recommended", limit: 4, page: 1 },
+        lang: params.lang,
+      });
     } catch (error) {
       throw error;
     }
@@ -125,20 +109,10 @@ export default async function CarDetailPage({
   const responseCarReview = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const response = await fetch(
-        `${urlAPI}/v1/reviews?car_id=${params.car_id}&limit=4&offset=1`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
-          },
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status} - ${response.statusText}`);
-      }
-      return response.json();
+      return customFetch<ApiResponse<ListCarReview>>(`/v1/reviews`, {
+        query: { car_id: params.car_id, limit: 4, offset: 1 },
+        lang: params.lang,
+      });
     } catch (error) {
       throw error;
     }

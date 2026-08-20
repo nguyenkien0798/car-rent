@@ -19,6 +19,7 @@ import dayjs from "dayjs";
 import { useForm } from "react-hook-form";
 import NoData from "../../public/images/no-data.png";
 import { appendQueryString } from "@/utils/helpers";
+import { customFetch } from "@/services/http";
 
 interface PickUpAndDropOff {
   pickup_location_id: string;
@@ -88,8 +89,6 @@ export default function Category({
   });
 
   const todayNow = new Date();
-  const urlAPI = process.env.NEXT_PUBLIC_URL_API;
-
   const buildCategoryRoute = (nextValues?: {
     type_ids?: string;
     capacities?: string;
@@ -207,14 +206,12 @@ export default function Category({
   const getFilter = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const res = await fetch(`${urlAPI}/v1/car-tags`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
+      const listFilter = await customFetch<{ data: FilterTag }>(
+        "/v1/car-tags",
+        {
+          lang: params.lang,
         },
-      });
-      const listFilter = await res.json();
+      );
 
       setListFilterTag(listFilter.data);
       setPriceMax(listFilter.data.price_range.max);
@@ -228,8 +225,10 @@ export default function Category({
   const getData = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
-      const res = await fetch(
-        appendQueryString(`${urlAPI}/v1/cars?limit=9&offset=${page}`, {
+      const list = await customFetch<{ data: ListCar }>("/v1/cars", {
+        query: {
+          limit: 9,
+          offset: page,
           type_ids: type_ids || undefined,
           capacities: capacities || undefined,
           max_price: max_price || undefined,
@@ -242,16 +241,9 @@ export default function Category({
           dropoff_date: dropoff_date
             ? dayjs(dropoff_date).format("MM/DD/YYYY")
             : undefined,
-        }),
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept-Language": `${params.lang === "en" ? "en-US" : "vi"}`,
-          },
         },
-      );
-      const list = await res.json();
+        lang: params.lang,
+      });
       setListCarCategory(list.data.items);
       setTotalListCar(list.data.pagination.total);
 
